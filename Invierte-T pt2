@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Román: Mi Meta de Ahorro</title>
+    <!-- Carga de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Carga de Iconos (Lucide Icons) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Configuración de Fuentes y Mobile Focus -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* Estilos específicos para la línea de progreso */
+        .runner-svg {
+            position: absolute;
+            bottom: -5px;
+            transform: translateX(-50%);
+            transition: left 0.7s ease-out;
+            z-index: 10;
+        }
+        .flag-svg {
+            position: absolute;
+            bottom: -5px;
+            right: -10px;
+            z-index: 5;
+        }
+        /* Garantizar que la tarjeta sea responsiva y se ajuste a la vista móvil */
+        .mobile-card {
+            max-width: 100%;
+            min-height: 100vh;
+            padding-bottom: 64px; 
+        }
+        @media (min-width: 640px) {
+            .mobile-card {
+                min-height: auto;
+                max-width: 480px; 
+            }
+        }
+        .nav-button.active {
+            color: #047857; /* teal-600 */
+            font-weight: 600;
+        }
+        .scroll-container {
+            -webkit-overflow-scrolling: touch;
+        }
+        /* Estilos para el modal personalizado */
+        .custom-modal {
+            transition: all 0.3s ease-in-out;
+        }
+        /* Estilos para el coche SVG más realista */
+        #carSvg .body-fill {
+            fill: #4c51bf; /* Azul Metálico */
+            transition: fill 0.5s ease;
+        }
+        #carSvg .window-fill {
+            fill: #88c0d0; /* Azul Claro para ventanas */
+        }
+        #carSvg .wheel-fill {
+            fill: #333; /* Negro Llantas */
+        }
+        #carSvg .rim-fill {
+            fill: #fefefe; /* Plata Rines */
+        }
+    </style>
+</head>
+<body class="flex items-start sm:items-center justify-center min-h-screen p-0 sm:p-4">
+
+    <!-- Contenedor Principal: Diseño Móvil -->
+    <div id="app" class="w-full mobile-card bg-white shadow-2xl sm:rounded-xl overflow-hidden relative">
+
+        <!-- Header Común -->
+        <div class="p-6 bg-gradient-to-br from-teal-500 to-emerald-600 text-white relative">
+            <h1 class="text-2xl font-extrabold tracking-tight mb-1">
+                Román
+            </h1>
+            <p class="text-teal-100 text-sm font-medium">Mi Desafío Financiero</p>
+            <div id="badge" class="absolute top-5 right-5 text-yellow-300 opacity-50 transition-opacity duration-500 hidden" title="¡Logro! Un año de disciplina financiera">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" class="shadow-lg">
+                    <defs>
+                        <linearGradient id="goldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:rgb(255,223,0);stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:rgb(197,179,88);stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <path fill="url(#goldGradient)" d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm3.71 7.71l-5 5c-.39.39-1.02.39-1.41 0l-2-2c-.39-.39-.39-1.02 0-1.41.39-.39 1.02-.39 1.41 0L10 13.59l4.29-4.3c.39-.39 1.02-.39 1.41 0 .38.39.38 1.02 0 1.41z"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Vista 1: INICIO (Pestaña principal) -->
+        <div id="inicioView" class="p-6 space-y-6">
+            
+            <!-- Saldo Total (Otros Ahorros) -->
+            <div class="text-center p-4 bg-teal-50 rounded-xl border border-teal-200 shadow-lg">
+                <p class="text-sm text-teal-700 font-medium uppercase">Otros Ahorros / Saldo de Inversión:</p>
+                <span id="savedAmountDisplayHome" class="text-5xl font-extrabold text-teal-800 transition-colors duration-300 block pt-1">$0</span>
+                <p class="text-xs text-gray-500 mt-1">Este saldo no incluye tu Meta Automóvil.</p>
+            </div>
+
+            <!-- Metas -->
+            <h2 class="text-lg font-bold text-gray-700 border-b pb-1 pt-4">Metas de Ahorro</h2>
+            <div class="space-y-3">
+                <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between shadow-md cursor-pointer" onclick="switchView('meta')">
+                    <i data-lucide="car" class="w-6 h-6 mr-3 text-emerald-600"></i>
+                    <div>
+                        <p class="font-bold text-emerald-800">Automóvil Nuevo</p>
+                        <p class="text-xs text-emerald-600">$150,000 MXN | <span id="metaCarPercentage">0%</span></p>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-gray-500"></i>
+                </div>
+            </div>
+
+            <!-- Micro-Ahorro -->
+            <h2 class="text-lg font-bold text-gray-700 border-b pb-1 pt-4">Micro-Ahorro Diario</h2>
+            <div class="p-4 bg-purple-50 rounded-xl border border-purple-200 shadow-md">
+                <p class="text-sm text-purple-700 font-medium mb-2">Convierte pequeños gastos en grandes ahorros.</p>
+                <input type="number" id="microSaveAmountInput" placeholder="Monto ahorrado (ej. 25)" 
+                    class="w-full p-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:ring focus:ring-purple-200 mb-3" 
+                    min="1" step="0.01">
+                <button id="microSaveBtn" 
+                        class="w-full py-2 px-4 bg-purple-600 text-white font-bold rounded-lg shadow-sm hover:bg-purple-700 transition duration-150 text-sm flex items-center justify-center">
+                    <i data-lucide="wallet" class="w-4 h-4 mr-2"></i> Registrar Micro-Ahorro
+                </button>
+            </div>
+
+            <!-- Sección de Gastos Manuales (Mantenida por utilidad) -->
+            <h2 class="text-lg font-bold text-gray-700 border-b pb-1 pt-4">Ajustes de Ingresos/Imprevistos</h2>
+            <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-md">
+                <input type="number" id="manualAmountInput" placeholder="Monto (ej. 500)" 
+                    class="w-full p-2 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring focus:ring-indigo-200 mb-2" 
+                    min="0.01" step="0.01">
+                <div class="flex space-x-2">
+                    <button id="depositBtn" 
+                            class="flex-1 py-2 px-4 bg-green-600 text-white font-bold rounded-lg shadow-sm hover:bg-green-700 transition duration-150 text-sm flex items-center justify-center">
+                        <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i> Ingreso Extra
+                    </button>
+                    <button id="withdrawBtn" 
+                            class="flex-1 py-2 px-4 bg-red-600 text-white font-bold rounded-lg shadow-sm hover:bg-red-700 transition duration-150 text-sm flex items-center justify-center">
+                        <i data-lucide="trending-down" class="w-4 h-4 mr-1"></i> Retiro Imprevisto
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Retos y Videos/Tutoriales -->
+            <h2 class="text-lg font-bold text-gray-700 border-b pb-1 pt-4">Retos y Aprendizaje</h2>
+            <div class="p-4 bg-yellow-50 rounded-xl border border-yellow-200 shadow-md space-y-3">
+                <div class="flex items-start">
+                    <i data-lucide="graduation-cap" class="w-5 h-5 mr-3 text-yellow-700 mt-1 flex-shrink-0"></i>
+                    <div>
+                        <p class="font-bold text-yellow-800">Video Recomendado: 'Interés Compuesto'</p>
+                        <p class="text-xs text-yellow-600">Aprende cómo tu dinero trabaja para ti. ¡Míralo ahora!</p>
+                    </div>
+                </div>
+                <div class="flex items-start">
+                    <i data-lucide="brain" class="w-5 h-5 mr-3 text-yellow-700 mt-1 flex-shrink-0"></i>
+                    <div>
+                        <p class="font-bold text-yellow-800">Reto Semanal: Ahorro Espejo</p>
+                        <p class="text-xs text-yellow-600">Duplica un gasto discrecional de la semana pasada (ej. si gastaste $50 en café, ahorra $50 extra).</p>
+                    </div>
+                </div>
+            </div>
+            
+        </div> <!-- Fin de inicioView -->
+
+        <!-- Vista 2: META (Automóvil Nuevo) -->
+        <div id="metaView" class="p-6 space-y-6 hidden">
+            
+            <h2 class="text-xl font-bold text-gray-700 mb-2 flex items-center">
+                <i data-lucide="car" class="w-5 h-5 mr-2 text-emerald-600"></i>
+                Meta: Automóvil Nuevo ($150,000 MXN)
+            </h2>
+             <p class="text-xs text-gray-500 font-medium flex justify-between">
+                <span>Meses Ahorrados: <span id="currentMonthDisplay" class="font-bold text-teal-600">0</span></span>
+                <span>Inicio del Ahorro: <span id="startDateDisplay" class="font-bold text-gray-700"></span></span>
+            </p>
+            
+            <!-- Car Builder Animation Section (Stylized SVG - Más realista) -->
+            <div class="p-4 bg-gray-100 rounded-xl shadow-inner mb-4 flex justify-center items-center relative h-36">
+                <div id="car-builder-container" class="w-full max-w-sm h-32 relative">
+                    <!-- SVG Más realista y genérico -->
+                    <svg id="carSvg" width="100%" height="100%" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet">
+                        <!-- Sombra/Piso -->
+                        <rect x="0" y="190" width="400" height="10" fill="#ddd"/>
+
+                        <!-- Rueda Trasera (Parte 1: 0%) -->
+                        <circle id="part1_wheel_r" cx="90" cy="170" r="25" class="wheel-fill transition-opacity duration-500" opacity="0"/>
+                        <circle id="part1_rim_r" cx="90" cy="170" r="10" class="rim-fill transition-opacity duration-500" opacity="0"/>
+                        
+                        <!-- Rueda Delantera (Parte 2: 20%) -->
+                        <circle id="part2_wheel_f" cx="310" cy="170" r="25" class="wheel-fill transition-opacity duration-500 delay-100" opacity="0"/>
+                        <circle id="part2_rim_f" cx="310" cy="170" r="10" class="rim-fill transition-opacity duration-500 delay-100" opacity="0"/>
+
+                        <!-- Base/Estructura (Parte 3: 40%) -->
+                        <rect id="part3_chassis" x="60" y="130" width="280" height="40" rx="10" fill="#a8a29e" class="transition-opacity duration-500 delay-200" opacity="0"/>
+                        
+                        <!-- Carrocería Inferior (Parte 4: 60%) -->
+                        <path id="part4_body_lower" d="M360 130 H60 Q30 130, 40 110 L360 110 Q370 130, 360 130 Z" class="body-fill transition-opacity duration-500 delay-300" opacity="0"/>
+
+                        <!-- Cabina (Parte 5: 80%) -->
+                        <path id="part5_cabin" d="M140 110 L260 110 C270 95, 260 80, 220 80 H180 C140 80, 130 95, 140 110 Z" class="body-fill transition-opacity duration-500 delay-400" opacity="0"/>
+
+                        <!-- Ventanas (Parte 6: 90%) -->
+                        <rect id="part6_window" x="175" y="87" width="50" height="20" rx="3" class="window-fill transition-opacity duration-500 delay-500" opacity="0"/>
+                        <rect id="part6_window_rear" x="145" y="90" width="25" height="15" rx="2" class="window-fill transition-opacity duration-500 delay-500" opacity="0"/>
+                        
+                        <!-- Faros/Detalles (Parte 7: 100%) -->
+                        <rect id="part7_headlight" x="350" y="115" width="5" height="5" rx="2" fill="#facc15" class="transition-opacity duration-500 delay-600" opacity="0"/>
+
+                        <!-- Texto label para indicar el progreso -->
+                        <text id="carStatusText" x="200" y="60" text-anchor="middle" font-size="18" fill="#4b5563" class="font-extrabold opacity-100 transition-opacity duration-500">Construyendo...</text>
+                    </svg>
+                </div>
+            </div>
+            <!-- Fin Car Builder -->
+
+            <!-- Resumen de Progreso de la Meta Coche -->
+            <div class="text-center p-4 bg-emerald-50 rounded-xl border border-emerald-200 shadow-md">
+                <p class="text-sm text-emerald-700 font-medium uppercase">Total Ahorrado para el Coche:</p>
+                <span id="carGoalProgressDisplay" class="text-4xl font-extrabold text-emerald-800 transition-colors duration-300 block pt-1">$0</span>
+                <p id="percentageDisplay" class="text-lg font-bold text-teal-600 mt-1">0% de la Meta</p>
+            </div>
+            
+            <!-- Pronóstico de Meta (Nuevo) -->
+            <div class="p-4 bg-indigo-50 rounded-xl border border-indigo-200 shadow-md">
+                <h3 class="font-bold text-indigo-700 flex items-center mb-2">
+                    <i data-lucide="clock" class="w-4 h-4 mr-2"></i> Pronóstico de Meta
+                </h3>
+                <p id="timeRemainingDisplay" class="text-sm text-gray-700 font-semibold"></p>
+                <p id="motivationalMessage" class="text-xs text-indigo-600 mt-1 italic font-medium"></p>
+            </div>
+
+            <!-- Visualización de Progreso General (Línea de Carrera) -->
+            <h3 class="text-lg font-bold text-gray-700 border-b pb-1 pt-4">Línea de Meta</h3>
+            <div class="relative w-full h-2 bg-gray-300 rounded-full mt-6 mb-8">
+                <div id="progressBarFill" 
+                    class="absolute top-0 left-0 h-2 bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full transition-all duration-700 ease-out" 
+                    style="width: 0%;">
+                </div>
+                <!-- Monito Corriendo -->
+                <div id="runner" class="runner-svg" style="left: 0%;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-running-stick-figure text-blue-800">
+                        <path d="M18 10c-1.3 0-2.6-.4-3.5-1-.9-.6-1.5-1.4-1.5-2.2V4h2L17 5l1.5-1.5 2.5 2.5"/>
+                        <path d="M7 13.3c-.6-.7-1-1.6-1-2.3 0-1.1.8-2 1.8-2h.8c.4 0 .8.2 1 .5l2 3c.5.7.9 1.7.9 2.4V20"/>
+                        <path d="M10.6 13.7c.1.5.3 1.1.5 1.6l2.3 4.6c.4.8.8 1.4 1.3 1.4h.8c.3 0 .6-.2.8-.4l2-3.4"/>
+                        <path d="M20 7h-2l-2 3c-.5.7-.9 1.7-.9 2.4V20"/>
+                        <path d="M9 20v-5c0-.8-.6-1.8-1-2.3"/>
+                        <circle cx="12" cy="4" r="2"/>
+                        <path d="M18 10h-5c-.7 0-1.5-.4-2-1-.8-.8-1.4-1.8-1.4-2.8V4"/>
+                    </svg>
+                </div>
+                <!-- Bandera de Meta -->
+                <div class="flag-svg">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="text-red-500">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+                        <path fill="currentColor" d="M14 6H5V3h9l1-2 1 2h3v3h-3l-1 2-1-2z"/>
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Detalle de la Contribución Total -->
+            <div class="grid grid-cols-1 gap-4 text-sm mt-4">
+                <p class="text-gray-600">
+                    Aportación (Total Acumulado): <span id="contributionAmount" class="font-extrabold text-blue-600 block text-lg">$0</span>
+                </p>
+            </div>
+
+            <!-- Historial de Transacciones Detallado (Mensual) -->
+            <h3 class="text-lg font-bold text-gray-700 border-b pb-1 pt-6">Detalles</h3>
+            <ul id="transactionLogList" class="space-y-4 max-h-60 overflow-y-auto p-4 border border-gray-200 rounded-xl bg-white shadow-inner">
+                <li class="text-gray-500 text-sm italic text-center p-2">Cargando historial...</li>
+            </ul>
+
+        </div> <!-- Fin de metaView -->
+
+        <!-- Barra de Navegación Inferior -->
+        <div class="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-200 shadow-xl flex justify-around items-center sm:hidden z-20">
+            <button id="navInicio" class="nav-button flex flex-col items-center p-2 text-gray-500 active" onclick="switchView('inicio')">
+                <i data-lucide="home" class="w-6 h-6"></i>
+                <span class="text-xs mt-1">Inicio</span>
+            </button>
+            <button id="navMeta" class="nav-button flex flex-col items-center p-2 text-gray-500" onclick="switchView('meta')">
+                <i data-lucide="target" class="w-6 h-6"></i>
+                <span class="text-xs mt-1">Meta</span>
+            </button>
+        </div>
+
+        <!-- Modal de Notificación Personalizado (Para reemplazar alert/confirm) -->
+        <div id="notificationModal" class="custom-modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
+            <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full transform -translate-y-4">
+                <div class="flex items-center space-x-3 mb-4">
+                    <i id="modalIcon" data-lucide="check-circle" class="w-6 h-6 text-green-600"></i>
+                    <h3 id="modalTitle" class="text-lg font-bold text-gray-800">Transacción Exitosa</h3>
+                </div>
+                <p id="modalMessage" class="text-gray-600 text-sm mb-6">El monto ha sido depositado exitosamente.</p>
+                <div class="flex justify-end">
+                    <button id="modalCloseBtn" class="py-2 px-4 bg-indigo-500 text-white font-semibold rounded-lg hover:bg-indigo-600 transition duration-150">
+                        Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- CONSTANTES DEL SEGUIMIENTO ---
+        const GOAL = 150000;
+        const MONTHLY_BASE_CONTRIBUTION = 6100; 
+        const INITIAL_OTHER_SAVINGS = 28000; // Otros ahorros iniciales fijos
+        const INITIAL_SAVING_MONTHS = 5; // 5 meses
+
+        // Historial Detallado de los primeros 5 meses de Román (Marzo - Julio 2024)
+        const SIMULATED_MONTHLY_CONTRIBUTIONS = [
+            { name: "Marzo 2024", details: [
+                { source: "Aporte Fijo", amount: 6100 },
+                { source: "Ahorro Espejo", amount: 400 }
+            ]},
+            { name: "Abril 2024", details: [ // Mes 2
+                { source: "Aporte Fijo", amount: 6100 },
+                { source: "Ahorro Silencioso", amount: 200 },
+                { source: "Reto de Ahorro", amount: 200 }
+            ]},
+            { name: "Mayo 2024", details: [ // Mes 3
+                { source: "Aporte Fijo", amount: 6100 },
+                { source: "Ahorro Silencioso", amount: 350 },
+                { source: "Ingreso Extra", amount: 2000 }
+            ]},
+            { name: "Junio 2024", details: [ // Mes 4
+                { source: "Aporte Fijo", amount: 6100 },
+                { source: "Gemelo Malvado", amount: 500 }
+            ]},
+            { name: "Julio 2024", details: [ // Mes 5
+                { source: "Aporte Fijo", amount: 6100 },
+                { source: "Reto Sin Compras", amount: 400 }
+            ]}
+        ];
+        
+        // Calcular el promedio de ahorro extra para el pronóstico
+        const totalExtraSaving = SIMULATED_MONTHLY_CONTRIBUTIONS.reduce((total, month) => {
+            const base = month.details.find(d => d.source.includes('Fijo'))?.amount || 0;
+            const monthTotal = month.details.reduce((sum, d) => sum + d.amount, 0);
+            return total + (monthTotal - base);
+        }, 0);
+        const AVG_MONTHLY_EXTRA = SIMULATED_MONTHLY_CONTRIBUTIONS.length > 0 
+            ? totalExtraSaving / SIMULATED_MONTHLY_CONTRIBUTIONS.length 
+            : 0;
+        
+        const BADGE_MONTH_THRESHOLD = 12; // Un año de ahorro (logro de persistencia)
+
+
+        // --- VARIABLES DE ESTADO ---
+        let currentMonthIndex = 0; 
+        let carGoalProgress = 0; 
+        let otherSavingsDisplay = INITIAL_OTHER_SAVINGS; 
+        let totalContribution = 0; 
+        let monthlyLog = []; 
+        let portfolioTotal = 0; 
+
+        // --- REFERENCIAS DEL DOM Y MODAL ---
+        const inicioView = document.getElementById('inicioView');
+        const metaView = document.getElementById('metaView');
+        const navInicio = document.getElementById('navInicio');
+        const navMeta = document.getElementById('navMeta');
+        const badge = document.getElementById('badge');
+        const savedAmountDisplayHome = document.getElementById('savedAmountDisplayHome');
+        const metaCarPercentage = document.getElementById('metaCarPercentage');
+        
+        // Micro-Ahorro Restaurado
+        const microSaveAmountInput = document.getElementById('microSaveAmountInput');
+        const microSaveBtn = document.getElementById('microSaveBtn');
+
+        // Manual Ahorro
+        const manualAmountInput = document.getElementById('manualAmountInput');
+        const depositBtn = document.getElementById('depositBtn');
+        const withdrawBtn = document.getElementById('withdrawBtn');
+
+        // Meta View
+        const startDateDisplay = document.getElementById('startDateDisplay');
+        const carGoalProgressDisplay = document.getElementById('carGoalProgressDisplay');
+        const monthDisplay = document.getElementById('currentMonthDisplay');
+        const percentageDisplay = document.getElementById('percentageDisplay');
+        const progressBarFill = document.getElementById('progressBarFill');
+        const runner = document.getElementById('runner');
+        const contributionAmountDisplay = document.getElementById('contributionAmount');
+        // Eliminado: const interestAmountDisplay = document.getElementById('interestAmount'); 
+        const transactionLogList = document.getElementById('transactionLogList');
+        const carSvg = document.getElementById('carSvg');
+        const timeRemainingDisplay = document.getElementById('timeRemainingDisplay');
+        const motivationalMessage = document.getElementById('motivationalMessage');
+        
+        // Modal
+        const notificationModal = document.getElementById('notificationModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalIcon = document.getElementById('modalIcon');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+        modalCloseBtn.addEventListener('click', () => {
+            notificationModal.classList.add('opacity-0', 'pointer-events-none');
+            notificationModal.querySelector('div').classList.add('-translate-y-4');
+        });
+
+        const showNotification = (title, message, type) => {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modalIcon.classList.remove('text-green-600', 'text-red-600');
+            modalIcon.setAttribute('data-lucide', type === 'success' ? 'check-circle' : 'alert-circle');
+            modalIcon.classList.add(type === 'success' ? 'text-green-600' : 'text-red-600');
+            if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+            notificationModal.classList.remove('opacity-0', 'pointer-events-none');
+            notificationModal.querySelector('div').classList.remove('-translate-y-4');
+        };
+
+        const formatCurrency = (amount) => {
+            // Formato de moneda sin decimales
+            return new Intl.NumberFormat('es-MX', {
+                style: 'currency',
+                currency: 'MXN',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(Math.round(amount));
+        };
+        
+        // Función auxiliar para formatear la cantidad con solo el signo $
+        const formatCurrencyShort = (amount) => {
+             return $${Math.round(amount).toLocaleString('es-MX')};
+        }
+        
+        /**
+         * Inicializa el estado simulando los 5 meses de ahorro.
+         */
+        const initializeState = () => {
+            carGoalProgress = 0; // Reset para el cálculo
+            totalContribution = 0;
+            monthlyLog = [];
+            
+            SIMULATED_MONTHLY_CONTRIBUTIONS.forEach((monthData, index) => {
+                const monthNumber = index + 1;
+                
+                // 1. Calcular contribución total del mes
+                const currentMonthContribution = monthData.details.reduce((sum, d) => sum + d.amount, 0);
+                
+                // 2. Aplicar contribución al saldo de la meta (SIN INTERESES)
+                carGoalProgress += currentMonthContribution;
+                totalContribution += currentMonthContribution;
+                
+                // 3. Registrar en el Historial Detallado
+                monthlyLog.push({
+                    month: monthNumber, 
+                    name: monthData.name,
+                    contribution: currentMonthContribution,
+                    finalCarBalance: carGoalProgress,
+                    details: monthData.details
+                });
+            });
+            
+            currentMonthIndex = INITIAL_SAVING_MONTHS;
+            portfolioTotal = carGoalProgress + otherSavingsDisplay;
+
+            // Ordenar el log para que el mes más reciente esté arriba
+            monthlyLog.reverse(); 
+        };
+
+
+        /**
+         * Renderiza la lista de historial de transacciones detalladas.
+         */
+        const renderTransactionLog = () => {
+            transactionLogList.innerHTML = ''; 
+            
+            if (monthlyLog.length === 0) {
+                transactionLogList.innerHTML = '<li class="text-gray-500 text-sm italic text-center p-2">Cargando historial...</li>';
+                return;
+            }
+
+            monthlyLog.forEach(log => {
+                const li = document.createElement('li');
+                li.className = 'p-4 rounded-xl shadow-md border text-sm bg-white border-teal-100';
+                
+                const totalAporte = log.details.reduce((sum, d) => sum + d.amount, 0);
+
+                // Cabecera del mes
+                let htmlContent = `
+                    <div class="flex justify-between items-center border-b pb-2 mb-2">
+                        <span class="text-lg font-extrabold text-teal-800">${log.name}</span>
+                        <span class="text-sm font-semibold text-gray-500">Saldo Final: ${formatCurrency(log.finalCarBalance)}</span>
+                    </div>
+                    <p class="font-bold text-gray-700 mb-2">Aporte Total del Mes: <span class="text-blue-600">${formatCurrency(totalAporte)}</span></p>
+                    <ul class="space-y-1 pl-2 border-l-2 border-dashed border-gray-300">
+                `;
+                
+                // Detalles de cada fuente de ahorro (Aplicando el formato solicitado: Nombre $Cantidad)
+                log.details.forEach(detail => {
+                    const isBase = detail.source.includes('Fijo');
+                    
+                    htmlContent += `
+                        <li class="flex justify-between items-center text-xs">
+                            <span class="${isBase ? 'text-gray-600' : 'font-bold text-purple-700'}">${detail.source}</span>
+                            <span class="${isBase ? 'text-gray-600' : 'font-bold text-purple-700'}">${formatCurrencyShort(detail.amount)}</span>
+                        </li>
+                    `;
+                });
+
+                htmlContent += </ul>;
+
+                li.innerHTML = htmlContent;
+                transactionLogList.appendChild(li);
+            });
+
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        };
+
+
+        /**
+         * Lógica de la animación del coche (construcción progresiva).
+         */
+        const updateCarConstruction = (percentage) => {
+            // Umbrales ajustados para 5 meses de progreso
+            const parts = [
+                { id: 'part1_wheel_r', threshold: 0 }, 
+                { id: 'part1_rim_r', threshold: 0 }, 
+                { id: 'part2_wheel_f', threshold: 20 },
+                { id: 'part2_rim_f', threshold: 20 },
+                { id: 'part3_chassis', threshold: 40 },
+                { id: 'part4_body_lower', threshold: 60 },
+                { id: 'part5_cabin', threshold: 80 },
+                { id: 'part6_window', threshold: 90 },
+                { id: 'part6_window_rear', threshold: 90 },
+                { id: 'part7_headlight', threshold: 95 }, // Faros casi al final
+            ];
+            
+            const carStatusText = document.getElementById('carStatusText');
+            
+            parts.forEach(part => {
+                const element = document.getElementById(part.id);
+                if (element) {
+                    element.style.opacity = percentage >= part.threshold ? 1 : 0;
+                }
+            });
+
+            const bodyParts = [document.getElementById('part4_body_lower'), document.getElementById('part5_cabin')];
+
+            if (percentage < 100) {
+                carStatusText.textContent = Ensamblando: ${percentage.toFixed(0)}%;
+                carStatusText.setAttribute('fill', '#4b5563');
+                bodyParts.forEach(el => el?.classList.add('body-fill'));
+                bodyParts.forEach(el => el?.setAttribute('fill', '#4c51bf'));
+            } else {
+                carStatusText.textContent = '¡META ALCANZADA! TU NUEVO COCHE.';
+                carStatusText.setAttribute('fill', '#10b981'); 
+                // Color final del coche (verde éxito)
+                bodyParts.forEach(el => el?.setAttribute('fill', '#10b981')); 
+            }
+        };
+        
+        /**
+         * Calcula el tiempo restante y el mensaje motivacional.
+         */
+        const updateTimeRemaining = () => {
+            const amountNeeded = GOAL - carGoalProgress;
+            
+            if (amountNeeded <= 0) {
+                timeRemainingDisplay.textContent = 'La meta ha sido ALCANZADA.';
+                motivationalMessage.textContent = 'Felicidades Román. Disfruta tu nuevo automóvil.';
+                return;
+            }
+
+            // Ahorro promedio mensual (Base + Extras)
+            const averageMonthlySaving = MONTHLY_BASE_CONTRIBUTION + AVG_MONTHLY_EXTRA; 
+
+            // Cálculo directo de meses restantes (SIN INTERESES)
+            const monthsRemaining = Math.ceil(amountNeeded / averageMonthlySaving);
+
+            let message = '';
+            let years = Math.floor(monthsRemaining / 12);
+            let months = monthsRemaining % 12;
+
+            if (monthsRemaining < 3) {
+                message = 'Ya casi, Román. Estás a la vuelta de la esquina. Máxima disciplina en estos últimos meses.';
+            } else if (monthsRemaining < 12) {
+                message = 'Ánimo, tú puedes. Solo falta un último empujón, mantén el ritmo de ahorro extra.';
+            } else if (monthsRemaining < 24) {
+                message = 'Estás en la recta final. Un poco más de constancia y pronto será tuyo.';
+            } else {
+                 message = 'Sigue con la constancia y esos ahorros extra. Cada peso te acerca más.';
+            }
+            
+            let timeString;
+            if (years > 0 && months > 0) {
+                timeString = ${years} año${years > 1 ? 's' : ''} y ${months} mes${months > 1 ? 'es' : ''};
+            } else if (years > 0) {
+                timeString = ${years} año${years > 1 ? 's' : ''};
+            } else {
+                timeString = ${months} mes${months > 1 ? 'es' : ''};
+            }
+
+            timeRemainingDisplay.textContent = Faltan aproximadamente ${timeString} para alcanzar los ${formatCurrency(GOAL)} MXN.;
+            motivationalMessage.textContent = message;
+        };
+
+
+        /**
+         * Actualiza todos los elementos de la interfaz de usuario.
+         */
+        const updateUI = () => {
+            const percentage = Math.min(100, (carGoalProgress / GOAL) * 100);
+            
+            // --- Actualizar VISTA META ---
+            monthDisplay.textContent = currentMonthIndex; 
+            percentageDisplay.textContent = ${percentage.toFixed(1)}% de la Meta;
+            carGoalProgressDisplay.textContent = formatCurrency(carGoalProgress);
+            contributionAmountDisplay.textContent = formatCurrency(totalContribution);
+            // Eliminado: interestAmountDisplay.textContent = formatCurrency(0); 
+            startDateDisplay.textContent = new Date('2024-03-01').toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
+
+            progressBarFill.style.width = ${percentage}%;
+            runner.style.left = ${Math.min(99, percentage)}%; 
+            
+            updateCarConstruction(percentage); 
+            updateTimeRemaining();
+
+            // --- Actualizar VISTA INICIO ---
+            savedAmountDisplayHome.textContent = formatCurrency(otherSavingsDisplay);
+            metaCarPercentage.textContent = ${percentage.toFixed(1)}%;
+
+            // Lógica de Insignia (Logro: Persistencia)
+            if (currentMonthIndex >= BADGE_MONTH_THRESHOLD) {
+                badge.classList.remove('hidden', 'opacity-50');
+                badge.classList.add('opacity-100');
+            } else {
+                badge.classList.add('hidden');
+            }
+
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        };
+
+        /**
+         * Maneja el depósito de Micro-Ahorro.
+         */
+        const handleMicroSave = () => {
+            const amount = parseFloat(microSaveAmountInput.value);
+            if (isNaN(amount) || amount <= 0) { showNotification('Error', 'Monto no válido.', 'error'); return; }
+            
+            // El micro-ahorro va a "Otros Ahorros"
+            otherSavingsDisplay += amount;
+            portfolioTotal += amount;
+            microSaveAmountInput.value = '';
+            
+            updateUI();
+            showNotification('Micro-Ahorro Registrado', Has guardado ${formatCurrency(amount)} extra. Pequeñas acciones, grandes resultados., 'success');
+        };
+
+        /**
+         * Maneja el depósito manual de dinero (Ingreso extra).
+         */
+        const handleDeposit = () => {
+            const amount = parseFloat(manualAmountInput.value);
+            if (isNaN(amount) || amount <= 0) { showNotification('Error', 'Monto no válido.', 'error'); return; }
+            otherSavingsDisplay += amount;
+            portfolioTotal += amount;
+            manualAmountInput.value = '';
+            updateUI();
+            showNotification('Ingreso Extra Exitoso', Has depositado ${formatCurrency(amount)} en Otros Ahorros., 'success');
+        };
+
+        /**
+         * Maneja el retiro manual de dinero (Imprevisto).
+         */
+        const handleWithdrawal = () => {
+            const amount = parseFloat(manualAmountInput.value);
+            if (isNaN(amount) || amount <= 0) { showNotification('Error', 'Monto no válido.', 'error'); return; }
+            if (amount > otherSavingsDisplay) { showNotification('Fondo Insuficiente', 'No tienes suficiente en Otros Ahorros.', 'error'); return; }
+
+            otherSavingsDisplay -= amount;
+            portfolioTotal -= amount;
+            manualAmountInput.value = '';
+
+            updateUI();
+            showNotification('Retiro Imprevisto', Se han retirado ${formatCurrency(amount)} de Otros Ahorros., 'error');
+        };
+        
+        /**
+         * Cambia la vista activa entre 'inicio' y 'meta'.
+         */
+        const switchView = (view) => {
+            const isInicio = view === 'inicio';
+            inicioView.classList.toggle('hidden', !isInicio);
+            metaView.classList.toggle('hidden', isInicio);
+            navInicio.classList.toggle('active', isInicio);
+            navMeta.classList.toggle('active', !isInicio);
+            if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+        };
+
+        // --- INICIALIZACIÓN ---
+        window.onload = () => {
+            initializeState(); // Calcula el estado final después de 5 meses
+            updateUI(); 
+            renderTransactionLog(); // Muestra el historial calculado
+
+            // Event Listeners
+            microSaveBtn.addEventListener('click', handleMicroSave);
+            depositBtn.addEventListener('click', handleDeposit);
+            withdrawBtn.addEventListener('click', handleWithdrawal);
+
+            // Iniciar en la vista de Inicio
+            switchView('inicio');
+
+            if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+        };
+
+    </script>
+</body>
+</html>
