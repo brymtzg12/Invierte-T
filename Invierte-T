@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Román: Mi Meta de Ahorro</title>
+    <!-- Carga de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Carga de Iconos (Lucide Icons) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Configuración de Fuentes y Mobile Focus -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* Estilos específicos para la línea de progreso */
+        .runner-svg {
+            position: absolute;
+            bottom: -5px;
+            transform: translateX(-50%);
+            transition: left 0.7s ease-out;
+            z-index: 10;
+        }
+        .flag-svg {
+            position: absolute;
+            bottom: -5px;
+            right: -10px;
+            z-index: 5;
+        }
+        /* Garantizar que la tarjeta sea responsiva y se ajuste a la vista móvil */
+        .mobile-card {
+            max-width: 100%;
+            min-height: 100vh;
+            padding-bottom: 64px; /* Espacio para la barra de navegación */
+        }
+        @media (min-width: 640px) {
+            .mobile-card {
+                min-height: auto;
+                max-width: 480px; 
+            }
+        }
+        .nav-button.active {
+            color: #047857; /* teal-600 */
+            font-weight: 600;
+        }
+        .scroll-container {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Estilos para el modal personalizado (sin usar alert()) */
+        .custom-modal {
+            transition: all 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="flex items-start sm:items-center justify-center min-h-screen p-0 sm:p-4">
+
+    <!-- Contenedor Principal: Diseño Móvil -->
+    <div id="app" class="w-full mobile-card bg-white shadow-2xl sm:rounded-xl overflow-hidden relative">
+
+        <!-- Header Común (Para ambas vistas) -->
+        <div class="p-6 bg-gradient-to-br from-teal-500 to-emerald-600 text-white relative">
+            <h1 class="text-2xl font-extrabold tracking-tight mb-1">
+                Román
+            </h1>
+            <p class="text-teal-100 text-sm font-medium">Mi Desafío Financiero</p>
+            
+            <!-- Insignia de Logro Dorado (en la parte superior derecha) -->
+            <div id="badge" class="absolute top-5 right-5 text-yellow-300 opacity-50 transition-opacity duration-500 hidden" title="¡Logro! 6 meses de disciplina financiera">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" class="shadow-lg">
+                    <defs>
+                        <linearGradient id="goldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:rgb(255,223,0);stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:rgb(197,179,88);stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <path fill="url(#goldGradient)" d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm3.71 7.71l-5 5c-.39.39-1.02.39-1.41 0l-2-2c-.39-.39-.39-1.02 0-1.41.39-.39 1.02-.39 1.41 0L10 13.59l4.29-4.3c.39-.39 1.02-.39 1.41 0 .38.39.38 1.02 0 1.41z"/>
+                </svg>
+            </div>
+            
+        </div>
+
+        <!-- Vista 1: INICIO (Pestaña principal) -->
+        <div id="inicioView" class="p-6 space-y-6">
+            
+            <!-- Saldo Total (Solo Otros Ahorros + Intereses) -->
+            <div class="text-center p-4 bg-teal-50 rounded-xl border border-teal-200 shadow-lg">
+                <p class="text-sm text-teal-700 font-medium uppercase">Otros Ahorros / Saldo de Inversión:</p>
+                <span id="savedAmountDisplayHome" class="text-5xl font-extrabold text-teal-800 transition-colors duration-300 block pt-1">$0</span>
+                <p class="text-xs text-gray-500 mt-1">Este saldo no incluye tu Meta Automóvil.</p>
+            </div>
+
+            <!-- Nuevo: Opción de Depósito/Retiro -->
+            <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-md">
+                <h3 class="font-bold text-gray-700 text-sm mb-2 flex items-center">
+                    <i data-lucide="wallet" class="w-4 h-4 mr-2 text-gray-600"></i>
+                    Ajuste Manual de Saldo
+                </h3>
+                <input type="number" id="manualAmountInput" placeholder="Monto (ej. 500)" 
+                    class="w-full p-2 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring focus:ring-indigo-200 mb-2" 
+                    min="0.01" step="0.01">
+                <div class="flex space-x-2">
+                    <button id="depositBtn" 
+                            class="flex-1 py-2 px-4 bg-green-600 text-white font-bold rounded-lg shadow-sm hover:bg-green-700 transition duration-150 text-sm flex items-center justify-center">
+                        <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i> Depositar
+                    </button>
+                    <button id="withdrawBtn" 
+                            class="flex-1 py-2 px-4 bg-red-600 text-white font-bold rounded-lg shadow-sm hover:bg-red-700 transition duration-150 text-sm flex items-center justify-center">
+                        <i data-lucide="trending-down" class="w-4 h-4 mr-1"></i> Retirar
+                    </button>
+                </div>
+            </div>
+            <!-- Fin Nuevo: Opción de Depósito/Retiro -->
+
+            <!-- Secciones de Hacks (Estrategias) -->
+            <h2 class="text-lg font-bold text-gray-700 border-b pb-1 pt-2">Estrategias de Ahorro Activas</h2>
+            <div class="space-y-3">
+                
+                <!-- 1. Primero Yo (Aporte Fijo) - AVISO DE PROGRESO -->
+                <div class="p-4 bg-purple-50 rounded-xl border border-purple-200 flex items-center shadow-md">
+                    <i data-lucide="shield-check" class="w-6 h-6 mr-3 text-purple-600"></i>
+                    <div>
+                        <p class="font-bold text-purple-800">Primero Yo</p>
+                        <p class="text-xs text-purple-600">Progreso mensual hacia la meta de $6,100.</p>
+                    </div>
+                    <!-- Muestra el porcentaje de avance del mes (vacío si es 0%) -->
+                    <span class="ml-auto text-lg font-extrabold text-purple-700" id="currentMonthlyContributionDisplayHome"></span>
+                </div>
+
+                <!-- 2. Ahorro Silencioso (10% en compras pequeñas) -->
+                <div class="p-4 bg-blue-50 rounded-xl border border-blue-200 flex items-center shadow-md">
+                    <i data-lucide="trending-up" class="w-6 h-6 mr-3 text-blue-600"></i>
+                    <div>
+                        <p class="font-bold text-blue-800">Ahorro Silencioso</p>
+                        <p class="text-xs text-blue-600">10% del gasto en compras menores a $100.</p>
+                    </div>
+                </div>
+
+                <!-- 3. Gemelo Malvado (Matching Gastos Hormiga) -->
+                <div class="p-4 bg-pink-50 rounded-xl border border-pink-200 flex items-center shadow-md">
+                    <i data-lucide="chevrons-up-down" class="w-6 h-6 mr-3 text-pink-600"></i>
+                    <div>
+                        <p class="font-bold text-pink-800">Gemelo Malvado</p>
+                        <p class="text-xs text-pink-600">Si haces un gasto menor a $100, tu gemelo te obliga a ahorrar el mismo monto.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metas -->
+            <h2 class="text-lg font-bold text-gray-700 border-b pb-1 pt-4">Metas de Ahorro</h2>
+            <div class="space-y-3">
+                <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between shadow-md cursor-pointer" onclick="switchView('meta')">
+                    <i data-lucide="car" class="w-6 h-6 mr-3 text-emerald-600"></i>
+                    <div>
+                        <p class="font-bold text-emerald-800">Automóvil Nuevo</p>
+                        <p class="text-xs text-emerald-600">$150,000 MXN | <span id="metaCarPercentage">0%</span></p>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-gray-500"></i>
+                </div>
+            </div>
+
+            <!-- Ahorro Colaborativo -->
+            <h2 class="text-lg font-bold text-gray-700 border-b pb-1 pt-4">Ahorro Colaborativo</h2>
+            <div class="p-4 bg-red-50 rounded-xl border border-red-200 flex items-center justify-between shadow-md">
+                <i data-lucide="zap" class="w-6 h-6 mr-3 text-red-600"></i>
+                <div>
+                    <p class="font-bold text-red-800">2 Ahorros, Una Meta</p>
+                    <p class="text-xs text-red-600">Coordina una meta con tu amigo: <span class="font-bold">Comenzar</span></p>
+                </div>
+                <i data-lucide="chevrons-right" class="w-4 h-4 text-red-500"></i> 
+            </div>
+
+            <!-- Reto Diario y Micro-Videos -->
+            <h2 class="text-lg font-bold text-gray-700 border-b pb-1 pt-4">Finanzas y Retos</h2>
+
+            <!-- Reto Diario Educativo -->
+            <div class="p-4 bg-yellow-50 rounded-xl border border-yellow-200 text-center shadow-md">
+                <p class="font-bold text-yellow-800 flex items-center justify-center mb-1">
+                    <i data-lucide="brain" class="w-5 h-5 mr-2"></i> Reto Diario: ¡Entiende el Interés!
+                </p>
+                <p class="text-sm text-yellow-600 mt-1">
+                    Calcula cuánto ganarías si invirtieras $1,000 MXN al 10% anual por 5 años. Por este ejercicio mental, regístrate un ahorro de <span class="font-extrabold text-lg">$50 MXN</span>.
+                </p>
+                <button id="dailyChallengeBtn" 
+                        class="mt-3 py-2 px-4 bg-yellow-500 text-white font-bold rounded-lg hover:bg-yellow-600 transition duration-150 text-sm">
+                    ¡Ahorrar $50 por aprender!
+                </button>
+            </div>
+
+            <!-- Micro-Videos -->
+            <div class="space-y-2">
+                <h3 class="font-bold text-gray-700 text-sm">Aprende más ;)</h3>
+                <div class="flex overflow-x-auto space-x-3 p-2 scroll-container">
+                    <div class="flex-shrink-0 w-32 h-44 bg-pink-300 rounded-xl shadow-md p-3 text-white font-bold text-center flex items-end">
+                        Inflación Explicada
+                    </div>
+                    <div class="flex-shrink-0 w-32 h-44 bg-indigo-300 rounded-xl shadow-md p-3 text-white font-bold text-center flex items-end">
+                        ¿Qué es un ETF?
+                    </div>
+                    <div class="flex-shrink-0 w-32 h-44 bg-red-300 rounded-xl shadow-md p-3 text-white font-bold text-center flex items-end">
+                        La Deuda Buena
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- Fin de inicioView -->
+
+        <!-- Vista 2: META (Simulador de Transacciones) -->
+        <div id="metaView" class="p-6 space-y-6 hidden">
+            
+            <h2 class="text-xl font-bold text-gray-700 mb-4 flex items-center">
+                <i data-lucide="car" class="w-5 h-5 mr-2 text-emerald-600"></i>
+                Meta: Automóvil Nuevo ($150,000 MXN)
+            </h2>
+            
+            <!-- Resumen de Progreso de la Meta Coche -->
+            <div class="text-center p-4 bg-emerald-50 rounded-xl border border-emerald-200 shadow-md">
+                <p class="text-sm text-emerald-700 font-medium uppercase">Ahorro Meta Coche:</p>
+                <span id="carGoalProgressDisplay" class="text-4xl font-extrabold text-emerald-800 transition-colors duration-300 block pt-1">$0</span>
+                <p id="percentageDisplay" class="text-lg font-bold text-teal-600 mt-1">0% de la Meta</p>
+            </div>
+
+
+            <!-- Visualización de Progreso General -->
+            <div class="space-y-3">
+                <p class="text-sm font-semibold text-gray-600">
+                    Meses Completados: <span id="currentMonthDisplay" class="text-lg font-bold text-teal-600">0</span> de 24
+                </p>
+
+                <!-- Línea de Progreso con Monito y Bandera -->
+                <div class="relative w-full h-2 bg-gray-300 rounded-full mt-6 mb-8">
+                    <div id="progressBarFill" 
+                         class="absolute top-0 left-0 h-2 bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full transition-all duration-700 ease-out" 
+                         style="width: 0%;">
+                    </div>
+                    <!-- Monito Corriendo -->
+                    <div id="runner" class="runner-svg" style="left: 0%;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-running-stick-figure text-blue-800">
+                            <path d="M18 10c-1.3 0-2.6-.4-3.5-1-.9-.6-1.5-1.4-1.5-2.2V4h2L17 5l1.5-1.5 2.5 2.5"/>
+                            <path d="M7 13.3c-.6-.7-1-1.6-1-2.3 0-1.1.8-2 1.8-2h.8c.4 0 .8.2 1 .5l2 3c.5.7.9 1.7.9 2.4V20"/>
+                            <path d="M10.6 13.7c.1.5.3 1.1.5 1.6l2.3 4.6c.4.8.8 1.4 1.3 1.4h.8c.3 0 .6-.2.8-.4l2-3.4"/>
+                            <path d="M20 7h-2l-2 3c-.5.7-.9 1.7-.9 2.4V20"/>
+                            <path d="M9 20v-5c0-.8-.6-1.8-1-2.3"/>
+                            <circle cx="12" cy="4" r="2"/>
+                            <path d="M4 14v6"/>
+                            <path d="M18 10h-5c-.7 0-1.5-.4-2-1-.8-.8-1.4-1.8-1.4-2.8V4"/>
+                        </svg>
+                    </div>
+                    <!-- Bandera de Meta -->
+                    <div class="flag-svg">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="text-red-500">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+                            <path fill="currentColor" d="M14 6H5V3h9l1-2 1 2h3v3h-3l-1 2-1-2z"/>
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                        </svg>
+                    </div>
+                </div>
+                
+                <!-- Simulador de Transacciones -->
+                <h3 class="text-lg font-bold text-gray-700 border-b pb-1 pt-4">Simulador de Micro-Ahorro</h3>
+                <div class="p-4 bg-gray-100 rounded-lg shadow-inner space-y-3">
+                    <p class="font-bold text-sm text-gray-700">Aporte del Mes: <span id="currentMonthlyContributionDisplay" class="text-teal-600">$0</span> / $6,100</p>
+                    
+                    <div class="flex space-x-2">
+                        <input type="number" id="transactionInput" placeholder="Monto del Gasto (e.g., 30.50)" 
+                            class="flex-grow p-2 border border-gray-300 rounded-lg focus:border-teal-500 focus:ring focus:ring-teal-200" 
+                            min="0.01" step="0.01">
+                        <button id="registerTransactionBtn" 
+                                class="py-2 px-4 bg-indigo-500 text-white font-bold rounded-lg shadow-md hover:bg-indigo-600 transition duration-150">
+                            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <p id="savingInfo" class="text-xs text-gray-600 mt-1">
+                        <span class="font-bold text-red-600">Hacks Aplicados:</span> Ahorro Silencioso (10% si gasto < $100) y Gemelo Malvado (Igualar gasto < $100).
+                    </p>
+                </div>
+
+                <!-- Detalle de la Ganancia -->
+                <div class="grid grid-cols-2 gap-4 text-sm mt-4">
+                    <p class="text-gray-600">
+                        Aportación Acumulada: <span id="contributionAmount" class="font-extrabold text-blue-600 block text-lg">$0</span>
+                    </p>
+                    <p class="text-gray-600">
+                        Ganancia por Intereses: <span id="interestAmount" class="font-extrabold text-emerald-600 block text-lg">$0</span>
+                    </p>
+                </div>
+
+                <p id="messageBox" class="text-center text-sm mt-3 font-semibold text-red-600 hidden">¡Meta Completada! Felicidades Román, ¡tienes tu auto!</p>
+            </div>
+
+            <!-- Historial de Ahorros -->
+            <h3 class="text-lg font-bold text-gray-700 border-b pb-1 pt-6">Historial de Meses Completados</h3>
+            <ul id="historyList" class="space-y-2 max-h-60 overflow-y-auto p-2 border border-gray-200 rounded-lg bg-gray-50">
+                <li class="text-gray-500 text-sm italic text-center p-2">Aún no hay meses completados.</li>
+            </ul>
+
+        </div> <!-- Fin de metaView -->
+
+        <!-- Barra de Navegación Inferior -->
+        <div class="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-200 shadow-xl flex justify-around items-center sm:hidden z-20">
+            <button id="navInicio" class="nav-button flex flex-col items-center p-2 text-gray-500 active" onclick="switchView('inicio')">
+                <i data-lucide="home" class="w-6 h-6"></i>
+                <span class="text-xs mt-1">Inicio</span>
+            </button>
+            <button id="navMeta" class="nav-button flex flex-col items-center p-2 text-gray-500" onclick="switchView('meta')">
+                <i data-lucide="target" class="w-6 h-6"></i>
+                <span class="text-xs mt-1">Meta</span>
+            </button>
+        </div>
+
+        <!-- Modal de Notificación Personalizado (Para reemplazar alert/confirm) -->
+        <div id="notificationModal" class="custom-modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
+            <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full transform -translate-y-4">
+                <div class="flex items-center space-x-3 mb-4">
+                    <i id="modalIcon" data-lucide="check-circle" class="w-6 h-6 text-green-600"></i>
+                    <h3 id="modalTitle" class="text-lg font-bold text-gray-800">Transacción Exitosa</h3>
+                </div>
+                <p id="modalMessage" class="text-gray-600 text-sm mb-6">El monto ha sido depositado exitosamente en tus Otros Ahorros.</p>
+                <div class="flex justify-end">
+                    <button id="modalCloseBtn" class="py-2 px-4 bg-indigo-500 text-white font-semibold rounded-lg hover:bg-indigo-600 transition duration-150">
+                        Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- CONSTANTES DEL SIMULADOR ---
+        const GOAL = 150000;
+        const MONTHLY_TARGET = 6100; // El aporte que debe alcanzar Román cada mes
+        const ANNUAL_RATE = 0.05;
+        const DAILY_CHALLENGE_AMOUNT = 50; // Monto del Reto Diario
+        const INITIAL_CAR_SAVINGS = 42000; // Saldo inicial para el coche (28% de 150,000)
+        const INITIAL_OTHER_SAVINGS = 28000; // Otros ahorros iniciales
+        const BADGE_MONTH_THRESHOLD = 6; // Insignia por completar 6 meses
+
+        // Tasa de interés mensual (compuesta)
+        const MONTHLY_RATE = ANNUAL_RATE / 12;
+
+        // --- VARIABLES DE ESTADO ---
+        let currentMonth = 0;
+        let portfolioTotal = INITIAL_CAR_SAVINGS + INITIAL_OTHER_SAVINGS; 
+        let carGoalProgress = INITIAL_CAR_SAVINGS; 
+        let otherSavingsDisplay = INITIAL_OTHER_SAVINGS; 
+        let totalContribution = INITIAL_CAR_SAVINGS; 
+        let totalInterest = 0;
+        let currentMonthlyContribution = 0; 
+        let history = []; 
+        
+        // --- REFERENCIAS DEL DOM ---
+        const inicioView = document.getElementById('inicioView');
+        const metaView = document.getElementById('metaView');
+        const navInicio = document.getElementById('navInicio');
+        const navMeta = document.getElementById('navMeta');
+        const badge = document.getElementById('badge');
+
+        // Referencias de la Vista INICIO
+        const savedAmountDisplayHome = document.getElementById('savedAmountDisplayHome');
+        const currentMonthlyContributionDisplayHome = document.getElementById('currentMonthlyContributionDisplayHome');
+        const metaCarPercentage = document.getElementById('metaCarPercentage');
+        const dailyChallengeBtn = document.getElementById('dailyChallengeBtn');
+        const manualAmountInput = document.getElementById('manualAmountInput');
+        const depositBtn = document.getElementById('depositBtn');
+        const withdrawBtn = document.getElementById('withdrawBtn');
+
+        // Referencias de la Vista META
+        const carGoalProgressDisplay = document.getElementById('carGoalProgressDisplay');
+        const btn = document.getElementById('registerTransactionBtn');
+        const transactionInput = document.getElementById('transactionInput');
+        const currentMonthlyContributionDisplay = document.getElementById('currentMonthlyContributionDisplay');
+        const monthDisplay = document.getElementById('currentMonthDisplay');
+        const percentageDisplay = document.getElementById('percentageDisplay');
+        const progressBarFill = document.getElementById('progressBarFill');
+        const runner = document.getElementById('runner');
+        const contributionAmountDisplay = document.getElementById('contributionAmount');
+        const interestAmountDisplay = document.getElementById('interestAmount');
+        const messageBox = document.getElementById('messageBox');
+        const historyList = document.getElementById('historyList');
+
+        // Referencias del Modal
+        const notificationModal = document.getElementById('notificationModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalIcon = document.getElementById('modalIcon');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+
+        /**
+         * Muestra el modal de notificación personalizado.
+         * @param {string} title
+         * @param {string} message
+         * @param {string} type - 'success' o 'error'
+         */
+        const showNotification = (title, message, type) => {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+
+            // Limpiar clases de ícono
+            modalIcon.classList.remove('text-green-600', 'text-red-600');
+            modalIcon.setAttribute('data-lucide', type === 'success' ? 'check-circle' : 'alert-circle');
+            modalIcon.classList.add(type === 'success' ? 'text-green-600' : 'text-red-600');
+
+            // Actualizar íconos
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+
+            notificationModal.classList.remove('opacity-0', 'pointer-events-none');
+            notificationModal.querySelector('div').classList.remove('-translate-y-4');
+        };
+
+        // Listener para cerrar el modal
+        modalCloseBtn.addEventListener('click', () => {
+            notificationModal.classList.add('opacity-0', 'pointer-events-none');
+            notificationModal.querySelector('div').classList.add('-translate-y-4');
+        });
+
+        /**
+         * Formatea un número como moneda MXN.
+         * @param {number} amount
+         * @returns {string}
+         */
+        const formatCurrency = (amount) => {
+            return new Intl.NumberFormat('es-MX', {
+                style: 'currency',
+                currency: 'MXN',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        };
+        
+        /**
+         * Renderiza la lista de historial de ahorros.
+         */
+        const renderHistory = () => {
+            historyList.innerHTML = ''; 
+            
+            if (history.length === 0) {
+                 historyList.innerHTML = '<li class="text-gray-500 text-sm italic text-center p-2">Aún no hay meses completados.</li>';
+                return;
+            }
+
+            history.slice().reverse().forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'p-3 rounded-lg shadow-sm border text-sm transition-all duration-300 bg-white border-gray-100';
+                
+                const surplusText = item.surplus > 0 
+                    ? <span class="font-bold text-red-600"> (+ ${formatCurrency(item.surplus)} de excedente para el siguiente mes)</span> 
+                    : '';
+                
+                li.innerHTML = `
+                    <p class="font-bold text-gray-800">Mes ${item.month} (Completado):</p>
+                    <div class="flex justify-between mt-1 text-xs">
+                        <span class="text-blue-600">Aporte Hacks: ${formatCurrency(item.contribution)}</span>
+                        <span class="text-emerald-600">Ganancia Int.: ${formatCurrency(item.interest)}</span>
+                    </div>
+                    <p class="text-sm font-extrabold mt-1">Saldo Meta Coche: ${formatCurrency(item.finalCarBalance)} ${surplusText}</p>
+                `;
+                historyList.appendChild(li);
+            });
+        };
+        
+        /**
+         * Actualiza todos los elementos de la interfaz de usuario.
+         */
+        const updateUI = () => {
+            const percentage = Math.min(100, (carGoalProgress / GOAL) * 100);
+            
+            // Cálculo del porcentaje de avance mensual para el display de "Primero Yo"
+            const monthlyPercentage = Math.min(100, (currentMonthlyContribution / MONTHLY_TARGET) * 100);
+            
+            // --- Actualizar VISTA META ---
+            monthDisplay.textContent = currentMonth;
+            percentageDisplay.textContent = ${percentage.toFixed(1)}% de la Meta;
+            carGoalProgressDisplay.textContent = formatCurrency(carGoalProgress);
+            contributionAmountDisplay.textContent = formatCurrency(totalContribution);
+            interestAmountDisplay.textContent = formatCurrency(totalInterest);
+            currentMonthlyContributionDisplay.textContent = formatCurrency(currentMonthlyContribution);
+
+            progressBarFill.style.width = ${percentage}%;
+            // Ajustar posición del corredor para que no quede fuera de la barra
+            runner.style.left = ${Math.min(99, percentage)}%; 
+            
+            // --- Actualizar VISTA INICIO ---
+            // Muestra solo Otros Ahorros + Intereses Acumulados
+            savedAmountDisplayHome.textContent = formatCurrency(otherSavingsDisplay);
+            // Muestra el porcentaje de avance mensual para "Primero Yo", o vacío si es 0%.
+            currentMonthlyContributionDisplayHome.textContent = monthlyPercentage.toFixed(0) > 0 ? ${monthlyPercentage.toFixed(0)}% : ''; 
+            metaCarPercentage.textContent = ${percentage.toFixed(1)}%;
+
+
+            // Lógica de Insignia (Logro: Persistencia)
+            if (currentMonth >= BADGE_MONTH_THRESHOLD) {
+                badge.classList.remove('hidden', 'opacity-50');
+                badge.classList.add('opacity-100');
+            } else {
+                badge.classList.add('hidden');
+            }
+
+            // Lógica de finalización
+            if (carGoalProgress >= GOAL) {
+                messageBox.textContent = '¡Meta Completada! Felicidades Román, ¡tienes tu auto!';
+                messageBox.classList.remove('hidden', 'text-red-600');
+                messageBox.classList.add('text-green-700');
+                
+                // Estilos de logro
+                carGoalProgressDisplay.classList.add('text-green-700');
+                percentageDisplay.classList.add('text-green-600');
+                savedAmountDisplayHome.classList.add('text-green-700');
+
+                // Deshabilitar
+                btn.disabled = true;
+                transactionInput.disabled = true;
+                dailyChallengeBtn.disabled = true;
+                depositBtn.disabled = true; // Deshabilitar ajustes manuales al completar la meta
+                withdrawBtn.disabled = true;
+                dailyChallengeBtn.textContent = 'Reto Completado';
+                dailyChallengeBtn.classList.remove('bg-yellow-500');
+                dailyChallengeBtn.classList.add('bg-gray-400');
+            } else {
+                messageBox.classList.add('hidden');
+                carGoalProgressDisplay.classList.remove('text-green-700');
+                savedAmountDisplayHome.classList.remove('text-green-700');
+                
+                // Re-habilitar
+                if (btn.disabled) {
+                    btn.disabled = false;
+                    transactionInput.disabled = false;
+                    dailyChallengeBtn.disabled = false;
+                    depositBtn.disabled = false;
+                    withdrawBtn.disabled = false;
+                    dailyChallengeBtn.textContent = ¡Ahorrar $${DAILY_CHALLENGE_AMOUNT} por aprender!;
+                    dailyChallengeBtn.classList.add('bg-yellow-500');
+                    dailyChallengeBtn.classList.remove('bg-gray-400');
+                }
+            }
+
+            // Asegurar que los iconos se rendericen después de la carga inicial
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        };
+
+        /**
+         * Simula el avance de un mes (automático).
+         * @param {number} contributionForMonth - La cantidad total que se contribuyó este mes.
+         */
+        const advanceMonth = (contributionForMonth) => {
+            currentMonth++;
+            
+            // 1. Calcular interés ganado este mes (basado en el saldo total del portafolio)
+            const interestGained = portfolioTotal * MONTHLY_RATE;
+            totalInterest += interestGained;
+            
+            // 2. Distribuir el interés proporcionalmente
+            const totalBaseBeforeAdvance = carGoalProgress + otherSavingsDisplay; 
+            const carInterest = interestGained * (carGoalProgress / totalBaseBeforeAdvance);
+            const otherInterest = interestGained - carInterest;
+            
+            portfolioTotal += interestGained; // Aumenta el saldo base para el siguiente mes
+            
+            // 3. Aplicar interés a cada saldo
+            carGoalProgress += carInterest; 
+            otherSavingsDisplay += otherInterest; // El display de 'Otros Ahorros' crece
+            
+            // 4. Aplicar la contribución y manejar excedente
+            let appliedContribution = Math.min(MONTHLY_TARGET, contributionForMonth);
+            let surplus = contributionForMonth - appliedContribution;
+
+            // La contribución ya fue sumada en registerTransaction.
+            
+            // 5. Registrar en el Historial
+            history.push({
+                month: currentMonth,
+                contribution: appliedContribution,
+                interest: interestGained,
+                surplus: surplus,
+                finalCarBalance: carGoalProgress,
+            });
+            
+            // 6. Resetear el aporte mensual, usando el excedente si existe
+            currentMonthlyContribution = surplus;
+            
+            renderHistory(); 
+            updateUI();
+        };
+
+        /**
+         * Registra una nueva transacción y calcula el ahorro por hacks.
+         */
+        const registerTransaction = () => {
+            const amount = parseFloat(transactionInput.value);
+            
+            if (isNaN(amount) || amount <= 0) {
+                showNotification('Error', 'Por favor, ingresa un monto de gasto válido.', 'error');
+                transactionInput.value = '';
+                return;
+            }
+
+            let totalMicroSaving = 0;
+            let silentSaving = 0; // 10%
+            let twinSaving = 0;   // Matching
+
+            // Ambos hacks se activan en compras pequeñas
+            if (amount < 100) {
+                // Hack 1: Ahorro Silencioso (10% del gasto)
+                silentSaving = amount * 0.10; 
+                
+                // Hack 2: Gemelo Malvado (Igualar el monto completo del gasto)
+                twinSaving = amount; 
+            }
+
+            totalMicroSaving = silentSaving + twinSaving;
+
+            // Actualizar Ahorros
+            if (totalMicroSaving > 0) {
+                portfolioTotal += totalMicroSaving; // Siempre aumenta el portafolio total (base de interés)
+                carGoalProgress += totalMicroSaving; // Todo el micro-ahorro va al coche
+                totalContribution += totalMicroSaving;
+                currentMonthlyContribution += totalMicroSaving;
+                
+                showNotification(
+                    'Micro-Ahorro Registrado', 
+                    Se generó un ahorro de ${formatCurrency(totalMicroSaving)}. Silencioso: ${formatCurrency(silentSaving)}, Gemelo Malvado: ${formatCurrency(twinSaving)}.,
+                    'success'
+                );
+            } else {
+                 showNotification(
+                    'Gasto Registrado', 
+                    Gasto de ${formatCurrency(amount)}. No se aplicó ningún micro-ahorro ya que el monto fue mayor a $100.,
+                    'success'
+                );
+            }
+
+            // Limpiar input y actualizar UI
+            transactionInput.value = '';
+            updateUI();
+
+            // Verificar si se alcanzó la meta mensual
+            if (currentMonthlyContribution >= MONTHLY_TARGET) {
+                advanceMonth(currentMonthlyContribution);
+            }
+        };
+
+        /**
+         * Lógica del Reto Diario.
+         */
+        const completeDailyChallenge = () => {
+             // Si la meta ya está completa, no hacer nada
+             if (carGoalProgress >= GOAL) return;
+
+            const challengeSaving = DAILY_CHALLENGE_AMOUNT;
+
+            portfolioTotal += challengeSaving; // Aumenta el portafolio total
+            carGoalProgress += challengeSaving; // El reto va a la meta del coche
+            totalContribution += challengeSaving;
+            currentMonthlyContribution += challengeSaving;
+
+            // Deshabilitar botón temporalmente
+            dailyChallengeBtn.textContent = '¡Ahorro Registrado!';
+            dailyChallengeBtn.disabled = true;
+            dailyChallengeBtn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
+            dailyChallengeBtn.classList.add('bg-gray-400');
+            
+            showNotification(
+                'Reto Diario Completado', 
+                ¡Felicidades! Has ahorrado ${formatCurrency(challengeSaving)} por tu aprendizaje.,
+                'success'
+            );
+
+            updateUI();
+
+            // Re-habilitar el botón después de un tiempo
+            setTimeout(() => {
+                dailyChallengeBtn.disabled = false;
+                dailyChallengeBtn.textContent = ¡Ahorrar $${DAILY_CHALLENGE_AMOUNT} por aprender!;
+                dailyChallengeBtn.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
+                dailyChallengeBtn.classList.remove('bg-gray-400');
+            }, 3000);
+
+
+            // Verificar si se alcanzó la meta mensual
+            if (currentMonthlyContribution >= MONTHLY_TARGET) {
+                advanceMonth(currentMonthlyContribution);
+            }
+        };
+
+        /**
+         * Maneja el depósito manual de dinero (Ingreso extra).
+         */
+        const handleDeposit = () => {
+            const amount = parseFloat(manualAmountInput.value);
+
+            if (isNaN(amount) || amount <= 0) {
+                showNotification('Error de Monto', 'Por favor, ingresa un monto positivo para depositar.', 'error');
+                return;
+            }
+
+            // El depósito manual va a la sección de "Otros Ahorros"
+            otherSavingsDisplay += amount;
+            portfolioTotal += amount;
+            manualAmountInput.value = '';
+
+            updateUI();
+            showNotification(
+                'Depósito Exitoso', 
+                Has depositado ${formatCurrency(amount)} como ingreso extra en tus Otros Ahorros.,
+                'success'
+            );
+        };
+
+        /**
+         * Maneja el retiro manual de dinero (Imprevisto).
+         */
+        const handleWithdrawal = () => {
+            const amount = parseFloat(manualAmountInput.value);
+
+            if (isNaN(amount) || amount <= 0) {
+                showNotification('Error de Monto', 'Por favor, ingresa un monto positivo para retirar.', 'error');
+                return;
+            }
+            
+            // Verificar si hay suficiente dinero en "Otros Ahorros" (que es de donde se saca el dinero imprevisto)
+            if (amount > otherSavingsDisplay) {
+                showNotification(
+                    'Fondo Insuficiente', 
+                    No puedes retirar ${formatCurrency(amount)}. Solo tienes ${formatCurrency(otherSavingsDisplay)} en Otros Ahorros., 
+                    'error'
+                );
+                return;
+            }
+
+            // Realizar el retiro
+            otherSavingsDisplay -= amount;
+            portfolioTotal -= amount;
+            manualAmountInput.value = '';
+
+            updateUI();
+            showNotification(
+                'Retiro por Imprevisto', 
+                Se han retirado ${formatCurrency(amount)} de tus Otros Ahorros para cubrir un imprevisto.,
+                'success'
+            );
+        };
+
+
+        /**
+         * Cambia la vista activa entre 'inicio' y 'meta'.
+         * @param {string} view - 'inicio' o 'meta'
+         */
+        const switchView = (view) => {
+            const isInicio = view === 'inicio';
+            inicioView.classList.toggle('hidden', !isInicio);
+            metaView.classList.toggle('hidden', isInicio);
+            navInicio.classList.toggle('active', isInicio);
+            navMeta.classList.toggle('active', !isInicio);
+            
+            // Forzar re-render de iconos en el cambio de vista
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        };
+
+
+        // --- INICIALIZACIÓN ---
+        window.onload = () => {
+            updateUI(); // Renderizado inicial (muestra saldos iniciales)
+            
+            // Listeners para la funcionalidad de Depósito/Retiro
+            depositBtn.addEventListener('click', handleDeposit);
+            withdrawBtn.addEventListener('click', handleWithdrawal);
+
+            // Listener para el simulador de transacciones (Vista Meta)
+            btn.addEventListener('click', registerTransaction);
+            transactionInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    registerTransaction();
+                }
+            });
+
+            // Listener para el Reto Diario (Vista Inicio)
+            dailyChallengeBtn.addEventListener('click', completeDailyChallenge);
+
+            // Iniciar en la vista de Inicio
+            switchView('inicio');
+
+            // Renderizar el historial inicial (vacío)
+            renderHistory();
+            
+            // Asegurar que los iconos se rendericen
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        };
+
+    </script>
+</body>
+</html>
